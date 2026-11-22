@@ -22,7 +22,7 @@ sudo paru -S acpi_call
 
 ## 2. Usage Commands
 
-All commands are run using `sudo`:
+All commands are run with `sudo`:
 
 ```bash
 cd ~/fan-control
@@ -38,6 +38,12 @@ Displays:
 * Live CPU Temperature
 * Fan 1 & Fan 2 ACPI Speed Register & Mode values
 * Real physical tachometer RPM for Fan 1 (CPU) and Fan 2 (Secondary)
+
+### Revert to Factory BIOS Auto
+```bash
+sudo python3 fan_control.py auto
+```
+Releases manual speed overrides (`0xFF`) and restores motherboard BIOS automatic thermal control (`0x05`). When your CPU warms up, the BIOS firmware automatically spins up the fans.
 
 ### Stop Fans (0% / Silent)
 ```bash
@@ -69,40 +75,17 @@ sudo python3 fan_control.py 75
 ```
 Sets both fans to any desired percentage duty cycle.
 
-### Revert to Factory BIOS Auto
-```bash
-sudo python3 fan_control.py auto
-```
-Reverts hardware fan control back to the motherboard BIOS firmware automatic thermal management.
-
-### Dynamic Temperature Curve (CLI Monitor)
-```bash
-sudo python3 fan_control.py curve
-```
-Monitors CPU temperatures continuously in your terminal and adapts fan speeds in real time:
-* **`>= 55°C`** $\rightarrow$ **100%** (Full Speed ~8000 RPM)
-* **`45°C - 55°C`** $\rightarrow$ **50%** (Medium Speed ~5700 RPM)
-* **`< 45°C`** $\rightarrow$ **0%** (Silent / Stopped 0 RPM)
-* **`>= 85°C`** $\rightarrow$ Emergency failsafe override (forces 100% full blast)
-
-*(Press `Ctrl+C` at any time to cleanly stop and revert fans to factory BIOS Auto)*.
-
-If you ever want to run the curve in the background of your terminal session:
-```bash
-sudo nohup python3 /home/vinit/fan-control/fan_control.py curve > /dev/null 2>&1 &
-```
-
 ---
 
 ## 3. Hardware Architecture Reference
 
 * **Motherboard:** Acer `Coral_RTH` (SFG14-71, Intel i5-13500H)
 * **Fan 1 (CPU):**
-  * Speed Register: `33026` (`0x8102`), range `0` to `100`%
+  * Speed Register: `33026` (`0x8102`), range `0` to `100`% (`0xFF` = Auto)
   * Mode Register: `33030` (`0x8106`), `0xFF` = Manual, `0x05` = BIOS Auto
   * Tachometer: EC RAM Offset `0x13` (16-bit word `C1FR`)
 * **Fan 2 (Secondary / Aux):**
-  * Speed Register: `33282` (`0x8202`), range `0` to `100`%
+  * Speed Register: `33282` (`0x8202`), range `0` to `100`% (`0xFF` = Auto)
   * Mode Register: `33286` (`0x8206`), `0xFF` = Manual, `0x05` = BIOS Auto
   * Tachometer: EC RAM Offset `0x15` (16-bit word `G1FR`)
 * **ACPI Methods:** `\_SB.PC00.LPCB.EC0.FANW` (write) and `\_SB.PC00.LPCB.EC0.FANG` (read)
